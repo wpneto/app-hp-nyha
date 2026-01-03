@@ -10,36 +10,40 @@ def generate_pdf(classe, tc6m, nt_probnp, risco_texto, conduta_texto):
     pdf = FPDF()
     pdf.add_page()
     
-    # Cabeçalho
+    # --- ADICIONAR LOGOTIPO ---
+    # 'logo.png' deve estar na mesma pasta do app.py
+    # Parâmetros: caminho, x, y, largura (w)
+    try:
+        pdf.image('cemed.png', x=10, y=8, w=363)
+    except:
+        # Se a imagem não for encontrada, o PDF continua sem o logo
+        pass
+
+    # Cabeçalho (ajustado para dar espaço ao logo)
     pdf.set_font("Arial", "B", 16)
-    pdf.cell(200, 10, "Relatorio de Avaliacao - Hipertensão Pulmonar", ln=True, align='C')
+    pdf.ln(10) # Pula linhas para não sobrepor o logo
+    pdf.cell(0, 10, "Relatorio de Avaliacao - Hipertensão Pulmonar", ln=True, align='C')
     pdf.ln(10)
     
-    # Dados do Paciente
+    # Restante do conteúdo (mesma lógica anterior)
     pdf.set_font("Arial", "B", 12)
-    pdf.cell(200, 10, "Dados Clinicos:", ln=True)
+    pdf.cell(0, 10, "Dados Clinicos:", ln=True)
     pdf.set_font("Arial", size=11)
-    pdf.cell(200, 8, f"Classe Funcional (NYHA/OMS): {classe}", ln=True)
-    pdf.cell(200, 8, f"Teste de Caminhada (6 min): {tc6m} metros", ln=True)
-    pdf.cell(200, 8, f"NT-proBNP: {nt_probnp} pg/mL", ln=True)
+    pdf.cell(0, 8, f"Classe Funcional (NYHA/OMS): {classe}", ln=True)
+    pdf.cell(0, 8, f"Teste de Caminhada (6 min): {tc6m} metros", ln=True)
+    pdf.cell(0, 8, f"NT-proBNP: {nt_probnp} pg/mL", ln=True)
     pdf.ln(5)
     
-    # Resultado
     pdf.set_font("Arial", "B", 12)
-    pdf.cell(200, 10, f"Estratificacao de Risco: {risco_texto}", ln=True)
+    pdf.set_text_color(0, 0, 0) # Cor preta padrão
+    pdf.cell(0, 10, f"Estratificacao de Risco: {risco_texto}", ln=True)
     pdf.ln(5)
     
-    # Conduta
     pdf.set_font("Arial", "B", 12)
-    pdf.cell(200, 10, "Conduta Sugerida:", ln=True)
+    pdf.cell(0, 10, "Conduta Sugerida:", ln=True)
     pdf.set_font("Arial", size=11)
     pdf.multi_cell(0, 8, conduta_texto.replace("✅", "").replace("💊", "").replace("⚠️", "").replace("🚨", ""))
     
-    pdf.ln(20)
-    pdf.set_font("Arial", "I", 8)
-    pdf.cell(0, 10, "Documento gerado para suporte a decisao clinica. Baseado em diretrizes ESC/ERS.", align='C')
-    
-    # Retorna o PDF como bytes
     return pdf.output(dest='S').encode('latin-1', errors='replace')
 
 # --- INTERFACE DO APP ---
