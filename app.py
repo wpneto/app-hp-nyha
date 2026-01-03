@@ -14,7 +14,7 @@ def generate_pdf(classe, tc6m, nt_probnp, risco_texto, conduta_texto):
     # 'logo.png' deve estar na mesma pasta do app.py
     # Parâmetros: caminho, x, y, largura (w)
     try:
-        pdf.image('cemed.png', x=10, y=8, w=363)
+        pdf.image('cemed.png', x=10, y=8, w=160)
     except:
         # Se a imagem não for encontrada, o PDF continua sem o logo
         pass
