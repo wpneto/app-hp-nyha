@@ -1,5 +1,37 @@
 import streamlit as st
 import pandas as pd
+from fpdf import FPDF
+import base64
+
+def generate_pdf(classe, tc6m, nt_probnp, risco, conduta):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", "B", 16)
+    pdf.cell(200, 10, "Relatório de Avaliação - Hipertensão Pulmonar", ln=True, align='C')
+    pdf.ln(10)
+    
+    pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, f"Classe Funcional: {classe}", ln=True)
+    pdf.cell(200, 10, f"Teste de Caminhada 6min: {tc6m} metros", ln=True)
+    pdf.cell(200, 10, f"NT-proBNP: {nt_probnp} pg/mL", ln=True)
+    pdf.cell(200, 10, f"Estratificação de Risco: {risco}", ln=True)
+    pdf.ln(5)
+    
+    pdf.set_font("Arial", "B", 12)
+    pdf.cell(200, 10, "Conduta Sugerida:", ln=True)
+    pdf.set_font("Arial", size=12)
+    pdf.multi_cell(0, 10, conduta)
+    
+    return pdf.output(dest='S').encode('latin-1')
+
+# --- NO FINAL DO SEU CÓDIGO DO APP, ADICIONE O BOTÃO ---
+pdf_data = generate_pdf(classe_oms, tc6m, nt_probnp, "Calculado", conduta)
+st.download_button(
+    label="📥 Baixar Relatório em PDF",
+    data=pdf_data,
+    file_name="relatorio_hp.pdf",
+    mime="application/pdf"
+)
 
 # Configuração da página para Mobile e Desktop
 st.set_page_config(page_title="HP ClinApp", layout="wide", initial_sidebar_state="collapsed")
