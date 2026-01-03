@@ -14,14 +14,15 @@ def generate_pdf(classe, tc6m, nt_probnp, risco_texto, conduta_texto):
     # 'logo.png' deve estar na mesma pasta do app.py
     # Parâmetros: caminho, x, y, largura (w)
     try:
-        pdf.image('cemed.png', x=10, y=8, w=48)
+        pdf.image('cemed.png', x=80, y=10, w=50)
     except:
         # Se a imagem não for encontrada, o PDF continua sem o logo
         pass
 
     # Cabeçalho (ajustado para dar espaço ao logo)
-    pdf.set_font("Arial", "B", 16)
-    pdf.ln(30) # Pula linhas para não sobrepor o logo
+    pdf.ln(35) # Pula linhas para não sobrepor o logo
+    
+    pdf.set_font("Arial", "B", 16)    
     pdf.cell(0, 10, "Relatorio de Avaliacao - Hipertensão Pulmonar", ln=True, align='C')
     pdf.ln(10)
     
