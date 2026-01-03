@@ -21,7 +21,7 @@ def generate_pdf(classe, tc6m, nt_probnp, risco_texto, conduta_texto):
 
     # Cabeçalho (ajustado para dar espaço ao logo)
     pdf.set_font("Arial", "B", 16)
-    pdf.ln(10) # Pula linhas para não sobrepor o logo
+    pdf.ln(20) # Pula linhas para não sobrepor o logo
     pdf.cell(0, 10, "Relatorio de Avaliacao - Hipertensão Pulmonar", ln=True, align='C')
     pdf.ln(10)
     
