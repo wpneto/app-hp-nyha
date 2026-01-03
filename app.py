@@ -1,101 +1,127 @@
 import streamlit as st
 import pandas as pd
 from fpdf import FPDF
-import base64
 
-def generate_pdf(classe, tc6m, nt_probnp, risco, conduta):
+# Configuração da Página
+st.set_page_config(page_title="HP Expert - Diagnóstico e Conduta", layout="wide")
+
+# --- FUNÇÃO PARA GERAR PDF ---
+def generate_pdf(classe, tc6m, nt_probnp, risco_texto, conduta_texto):
     pdf = FPDF()
     pdf.add_page()
+    
+    # Cabeçalho
     pdf.set_font("Arial", "B", 16)
-    pdf.cell(200, 10, "Relatório de Avaliação - Hipertensão Pulmonar", ln=True, align='C')
+    pdf.cell(200, 10, "Relatorio de Avaliacao - Hipertensão Pulmonar", ln=True, align='C')
     pdf.ln(10)
     
-    pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, f"Classe Funcional: {classe}", ln=True)
-    pdf.cell(200, 10, f"Teste de Caminhada 6min: {tc6m} metros", ln=True)
-    pdf.cell(200, 10, f"NT-proBNP: {nt_probnp} pg/mL", ln=True)
-    pdf.cell(200, 10, f"Estratificação de Risco: {risco}", ln=True)
+    # Dados do Paciente
+    pdf.set_font("Arial", "B", 12)
+    pdf.cell(200, 10, "Dados Clinicos:", ln=True)
+    pdf.set_font("Arial", size=11)
+    pdf.cell(200, 8, f"Classe Funcional (NYHA/OMS): {classe}", ln=True)
+    pdf.cell(200, 8, f"Teste de Caminhada (6 min): {tc6m} metros", ln=True)
+    pdf.cell(200, 8, f"NT-proBNP: {nt_probnp} pg/mL", ln=True)
     pdf.ln(5)
     
+    # Resultado
+    pdf.set_font("Arial", "B", 12)
+    pdf.cell(200, 10, f"Estratificacao de Risco: {risco_texto}", ln=True)
+    pdf.ln(5)
+    
+    # Conduta
     pdf.set_font("Arial", "B", 12)
     pdf.cell(200, 10, "Conduta Sugerida:", ln=True)
-    pdf.set_font("Arial", size=12)
-    pdf.multi_cell(0, 10, conduta)
+    pdf.set_font("Arial", size=11)
+    pdf.multi_cell(0, 8, conduta_texto.replace("✅", "").replace("💊", "").replace("⚠️", "").replace("🚨", ""))
     
-    return pdf.output(dest='S').encode('latin-1')
-
-# --- NO FINAL DO SEU CÓDIGO DO APP, ADICIONE O BOTÃO ---
-pdf_data = generate_pdf(classe_oms, tc6m, nt_probnp, "Calculado", conduta)
-st.download_button(
-    label="📥 Baixar Relatório em PDF",
-    data=pdf_data,
-    file_name="relatorio_hp.pdf",
-    mime="application/pdf"
-)
-
-# Configuração da página para Mobile e Desktop
-st.set_page_config(page_title="HP ClinApp", layout="wide", initial_sidebar_state="collapsed")
-
-# Cabeçalho
-st.title("🩺 HP ClinApp")
-st.subheader("Suporte à Decisão: Diagnóstico e Risco na HP")
-
-# --- BARRA LATERAL / ENTRADA DE DADOS ---
-with st.expander("📝 Dados do Paciente", expanded=True):
-    col1, col2 = st.columns(2)
-    with col1:
-        classe_oms = st.selectbox(
-            "Classe Funcional (OMS/NYHA):",
-            ["Classe I", "Classe II", "Classe III", "Classe IV"],
-            help="I: Sem sintomas | IV: Sintomas em repouso"
-        )
-        tc6m = st.slider("Teste de Caminhada 6 min (metros):", 0, 800, 350)
+    pdf.ln(20)
+    pdf.set_font("Arial", "I", 8)
+    pdf.cell(0, 10, "Documento gerado para suporte a decisao clinica. Baseado em diretrizes ESC/ERS.", align='C')
     
-    with col2:
-        nt_probnp = st.number_input("NT-proBNP (pg/mL):", value=500)
-        v_perfusao = st.radio("Cintilografia V/Q alterada?", ["Não", "Sim"])
+    # Retorna o PDF como bytes
+    return pdf.output(dest='S').encode('latin-1', errors='replace')
+
+# --- INTERFACE DO APP ---
+st.title("🩺 HP Expert: Suporte à Decisão")
+st.markdown("Classificação Funcional NYHA/OMS e Estratificação de Risco")
+st.divider()
+
+# Colunas principais
+col_input, col_result = st.columns([1, 1.2])
+
+with col_input:
+    st.header("1. Entrada de Dados")
+    
+    classe_sel = st.selectbox(
+        "Classe Funcional (NYHA/OMS):",
+        ["Classe I", "Classe II", "Classe III", "Classe IV"],
+        help="I: Sem limitações | IV: Sintomas em repouso"
+    )
+    
+    tc6m_valor = st.slider("Caminhada de 6 min (metros):", 0, 800, 350)
+    nt_probnp_valor = st.number_input("NT-proBNP (pg/mL):", min_value=0, value=500)
+    
+    v_perfusao = st.radio("Cintilografia V/Q positiva para TEP?", ["Não", "Sim"])
 
 # --- LÓGICA DE ESTRATIFICAÇÃO ---
-st.divider()
-st.header("📊 Avaliação de Risco e Conduta")
-
-# Cálculo de pontuação simplificado
 score = 0
-if classe_oms in ["Classe I", "Classe II"]: score += 1
-elif classe_oms == "Classe III": score += 2
+if classe_sel in ["Classe I", "Classe II"]: score += 1
+elif classe_sel == "Classe III": score += 2
 else: score += 3
 
-if tc6m > 440: score += 1
-elif 165 <= tc6m <= 440: score += 2
+if tc6m_valor > 440: score += 1
+elif 165 <= tc6m_valor <= 440: score += 2
 else: score += 3
 
-if nt_probnp < 300: score += 1
-elif 300 <= nt_probnp <= 1400: score += 2
+if nt_probnp_valor < 300: score += 1
+elif 300 <= nt_probnp_valor <= 1400: score += 2
 else: score += 3
 
-media = score / 3
+media_risco = score / 3
 
-# Exibição de Resultados
-res_col1, res_col2 = st.columns([1, 2])
-
-with res_col1:
-    if media <= 1.5:
-        st.success("🟢 BAIXO RISCO\n(Mortalidade < 5%)")
-    elif media <= 2.5:
-        st.warning("🟡 RISCO INTERMEDIÁRIO\n(Mortalidade 5-20%)")
-    else:
-        st.error("🔴 ALTO RISCO\n(Mortalidade > 20%)")
-
-with res_col2:
+with col_result:
+    st.header("2. Resultado e Conduta")
+    
+    # Definindo Risco e Conduta
     if v_perfusao == "Sim":
-        st.info("🔍 **Alerta de Grupo 4:** Cintilografia alterada sugere HP Tromboembólica Crônica. Avaliar indicação de Tromboendarterectomia.")
+        risco_status = "ALERTA: GRUPO 4"
+        conduta = "Cintilografia alterada sugere HP Tromboembólica Crônica (HPTEC). Encaminhar para centro especializado para avaliar Tromboendarterectomia ou Angioplastia de Balão."
+        st.info(f"🔍 **{conduta}**")
     else:
-        st.markdown("**Conduta Recomendada (Grupo 1):**")
-        if media <= 1.5:
-            st.write("- Iniciar terapia combinada oral (Inibidor PDE5 + ARE).")
-        elif media <= 2.5:
-            st.write("- Terapia tripla oral ou considerar análogos da prostaciclina.")
+        if media_risco <= 1.5:
+            risco_status = "BAIXO RISCO"
+            conduta = "Terapia combinada oral inicial (Inibidor da PDE5 + Antagonista da Endotelina)."
+            st.success(f"🟢 **{risco_status}** (Mortalidade em 1 ano < 5%)")
+        elif media_risco <= 2.5:
+            risco_status = "RISCO INTERMEDIÁRIO"
+            conduta = "Avaliar terapia tripla oral. Considerar adição de agonistas do receptor da prostaciclina (Selexipague) ou troca para estimuladores da guanilato ciclase."
+            st.warning(f"🟡 **{risco_status}** (Mortalidade em 1 ano 5-20%)")
         else:
-            st.write("- **Emergência:** Prostanoides IV/SC e avaliação para transplante.")
+            risco_status = "ALTO RISCO"
+            conduta = "🚨 EMERGÊNCIA: Iniciar Prostanoides Parenterais (IV/SC) imediatamente. Encaminhar para avaliação de transplante pulmonar."
+            st.error(f"🔴 **{risco_status}** (Mortalidade em 1 ano > 20%)")
+        
+        st.markdown(f"**Conduta Sugerida:**\n{conduta}")
 
-st.caption("⚠️ Uso exclusivo para profissionais de saúde. Baseado nas diretrizes ESC/ERS 2022.")
+    # --- BOTÃO DE DOWNLOAD PDF ---
+    st.divider()
+    try:
+        pdf_bytes = generate_pdf(classe_sel, tc6m_valor, nt_probnp_valor, risco_status, conduta)
+        st.download_button(
+            label="📥 Baixar Relatório (PDF)",
+            data=pdf_bytes,
+            file_name=f"relatorio_HP_{classe_sel.replace(' ', '')}.pdf",
+            mime="application/pdf"
+        )
+    except Exception as e:
+        st.error(f"Erro ao gerar PDF: {e}")
+
+# Rodapé informando critérios hemodinâmicos
+with st.expander("Critérios Hemodinâmicos (Cateterismo Direito)"):
+    st.write("Valores de referência para diagnóstico (ESC/ERS 2022):")
+    st.latex(r"mPAP > 20 \text{ mmHg}")
+    st.latex(r"PAWP \leq 15 \text{ mmHg (Pré-capilar)}")
+    st.latex(r"PVR \geq 2 \text{ Wood Units}")
+
+st.caption("Uso exclusivo para fins educacionais e suporte médico. Sempre valide com as diretrizes locais.")
